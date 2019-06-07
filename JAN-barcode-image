@@ -1,0 +1,80 @@
+```csharp
+
+// get paramator (JAN:4902425613642)
+string jan = textBox1.Text;
+
+// error check
+if (jan.Length != 13) {
+    return;
+}
+
+// create bit array
+int[] bit = new int[jan.Length];
+for (int i = 0; i < jan.Length; i++) {
+    bit[i] = Convert.ToInt32 (jan[i].ToString ());
+}
+
+// bit pattern
+// O:odd E:even
+string[] PREFIX_PATTERN = { "OOOOOO", "OOEOEE", "OOEEOE", "OOEEEO", "OEOOEE", "OEEOOE", "OEEEOO", "OEOEOE", "OEOEEO", "OEEOEO" };
+string LEFT_MARGIN = "00000000000";
+string LEFT_GUID_BAR = "101";
+string CENTER_BAR = "01010";
+string RIGHT_GUID_BAR = "101";
+string RIGHT_MARGIN = "0000000";
+string[] PARITY_ODD = { "0001101", "0011001", "0010011", "0111101", "0100011", "0110001", "0101111", "0111011", "0110111", "0001011" };
+string[] PARITY_EVEN = { "0100111", "0110011", "0011011", "0100001", "0011101", "0111001", "0000101", "0010001", "0001001", "0010111" };
+string[] PARITY_DATA = { "1110010", "1100110", "1101100", "1000010", "1011100", "1001110", "1010000", "1000100", "1001000", "1110100" };
+
+//char[] prefix = PREFIX_PATTERN[bit[0]].ToCharArray();
+string bar = String.Format (
+    "{0}{1}{2}{3}{4}{5}{6}{7}{8}{9}{10}{11}{12}{13}{14}{15}{16}",
+    LEFT_MARGIN,
+    LEFT_GUID_BAR,
+    PREFIX_PATTERN[bit[0]][0] == 'O' ? PARITY_ODD[bit[1]] : PARITY_EVEN[bit[1]],
+    PREFIX_PATTERN[bit[0]][1] == 'O' ? PARITY_ODD[bit[2]] : PARITY_EVEN[bit[2]],
+    PREFIX_PATTERN[bit[0]][2] == 'O' ? PARITY_ODD[bit[3]] : PARITY_EVEN[bit[3]],
+    PREFIX_PATTERN[bit[0]][3] == 'O' ? PARITY_ODD[bit[4]] : PARITY_EVEN[bit[4]],
+    PREFIX_PATTERN[bit[0]][4] == 'O' ? PARITY_ODD[bit[5]] : PARITY_EVEN[bit[5]],
+    PREFIX_PATTERN[bit[0]][5] == 'O' ? PARITY_ODD[bit[6]] : PARITY_EVEN[bit[6]],
+    //prefix[0] == 'O' ? PARITY_ODD[bit[1]] : PARITY_EVEN[bit[1]],
+    //prefix[1] == 'O' ? PARITY_ODD[bit[2]] : PARITY_EVEN[bit[2]],
+    //prefix[2] == 'O' ? PARITY_ODD[bit[3]] : PARITY_EVEN[bit[3]],
+    //prefix[3] == 'O' ? PARITY_ODD[bit[4]] : PARITY_EVEN[bit[4]],
+    //prefix[4] == 'O' ? PARITY_ODD[bit[5]] : PARITY_EVEN[bit[5]],
+    //prefix[5] == 'O' ? PARITY_ODD[bit[6]] : PARITY_EVEN[bit[6]],
+    CENTER_BAR,
+    PARITY_DATA[bit[7]],
+    PARITY_DATA[bit[8]],
+    PARITY_DATA[bit[9]],
+    PARITY_DATA[bit[10]],
+    PARITY_DATA[bit[11]],
+    PARITY_DATA[bit[12]],
+    RIGHT_GUID_BAR,
+    RIGHT_MARGIN
+);
+
+// Create image
+int width = 30;
+int height = 1000;
+DrawingVisual dv = new DrawingVisual ();
+using (DrawingContext dc = dv.RenderOpen ()) {
+    for (int x = 0; x < bar.Length; x++) {
+        if (bar[x] == '1') {
+            dc.DrawLine (new Pen (Brushes.Black, width), new Point (x * width, 0), new Point (x * width, height));
+        }
+    }
+}
+RenderTargetBitmap bitmap = new RenderTargetBitmap (200, 60, 5, 5, PixelFormats.Pbgra32);
+bitmap.Render (dv);
+
+// Display
+image1.Source = bitmap;
+
+// Save
+FileStream fs = File.Create (@"C:\barcode.png");
+PngBitmapEncoder encoder = new PngBitmapEncoder ();
+encoder.Frames.Add (BitmapFrame.Create (bitmap));
+encoder.Save (fs);
+fs.Close ();
+```
